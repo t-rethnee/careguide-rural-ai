@@ -20,7 +20,9 @@ if DATABASE_URL.startswith("postgresql://"):
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"sslmode": "require"}
+    connect_args={"sslmode": "require"},
+    pool_pre_ping=True,
+    pool_recycle=300
 )
 
 SessionLocal = sessionmaker(
