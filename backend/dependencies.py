@@ -7,7 +7,6 @@ from database import get_db
 from models import User
 from security import decode_access_token
 
-
 # Bearer token authentication
 bearer_scheme = HTTPBearer()
 
@@ -16,10 +15,8 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: Session = Depends(get_db)
 ):
-    # Get JWT token
     token = credentials.credentials
 
-    # Decode and verify token
     payload = decode_access_token(token)
 
     if payload is None:
@@ -29,7 +26,6 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    # Get user ID from token
     user_id = payload.get("sub")
 
     if user_id is None:
@@ -39,7 +35,6 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    # Find user in database
     try:
         user_id = int(user_id)
     except (ValueError, TypeError):
