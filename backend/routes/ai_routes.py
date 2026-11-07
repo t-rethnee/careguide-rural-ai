@@ -66,7 +66,9 @@ def chat_with_assistant(
             "answer": answer
         }
 
-    except Exception:
+    except Exception as error:
+        print("CHAT ERROR:", repr(error))
+
         raise HTTPException(
             status_code=502,
             detail="Unable to generate a response. Please try again later."
@@ -88,6 +90,10 @@ async def transcribe_voice(
     try:
         audio_bytes = await audio.read()
 
+        print("Audio filename:", audio.filename)
+        print("Audio content type:", audio.content_type)
+        print("Audio size:", len(audio_bytes), "bytes")
+
         if not audio_bytes:
             raise HTTPException(
                 status_code=400,
@@ -99,6 +105,9 @@ async def transcribe_voice(
             audio.content_type or "audio/webm"
         )
 
+        if not transcript or not transcript.strip():
+            raise ValueError("No speech detected in the audio.")
+
         return {
             "transcript": transcript
         }
@@ -107,12 +116,16 @@ async def transcribe_voice(
         raise
 
     except ValueError as error:
+        print("STT VALUE ERROR:", repr(error))
+
         raise HTTPException(
             status_code=400,
             detail=str(error)
         )
 
-    except Exception:
+    except Exception as error:
+        print("STT ERROR:", repr(error))
+
         raise HTTPException(
             status_code=502,
             detail="Unable to transcribe audio. Please try again."
@@ -146,12 +159,16 @@ def generate_voice_response(
         )
 
     except ValueError as error:
+        print("TTS VALUE ERROR:", repr(error))
+
         raise HTTPException(
             status_code=400,
             detail=str(error)
         )
 
-    except Exception:
+    except Exception as error:
+        print("TTS ERROR:", repr(error))
+
         raise HTTPException(
             status_code=502,
             detail="Unable to generate speech. Please try again."
