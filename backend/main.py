@@ -3,6 +3,11 @@ from database import Base, engine
 import models
 from routes.auth_routes import router as auth_router
 from fastapi.middleware.cors import CORSMiddleware
+from routes.ai_routes import router as ai_router
+from routes.facility_routes import router as facility_router
+
+
+
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -27,6 +32,9 @@ app.add_middleware(
 
 # Authentication routes
 app.include_router(auth_router)
+app.include_router(ai_router)
+app.include_router(facility_router)
+
 
 
 @app.get("/")

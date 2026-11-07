@@ -1,6 +1,7 @@
 
 from pydantic import BaseModel, EmailStr, Field, model_validator
-
+from typing import Optional
+from pydantic import BaseModel
 
 class UserRegister(BaseModel):
 
@@ -39,3 +40,19 @@ class UserResponse(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+class FacilityResponse(BaseModel):
+    id: int
+    name: str
+    name_bangla: Optional[str] = None
+    facility_type: str
+    district: str
+    upazila: str
+    area_name: str
+    address: Optional[str] = None
+    contact_number: Optional[str] = None
+    email: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+    class Config:
+        from_attributes = True

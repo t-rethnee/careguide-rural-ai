@@ -21,6 +21,8 @@ import {
 
 import { useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import HealthcareAssistant from './pages/HealthcareAssistant'
+
 
 // Reusable Navbar
 function Navbar() {
@@ -85,6 +87,7 @@ function Navbar() {
     </nav>
   )
 }
+
 
 // Home Page
 function Home() {
@@ -216,6 +219,7 @@ function Home() {
   )
 }
 
+
 // Login Page
 function Login() {
   const { login, user } = useAuth()
@@ -253,7 +257,6 @@ function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-10">
-
       <div className="w-full max-w-md">
         <Link to="/" className="mb-8 flex items-center justify-center gap-2">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 text-white">
@@ -265,7 +268,6 @@ function Login() {
         </Link>
 
         <div className="rounded-3xl border border-gray-100 bg-white p-7 shadow-xl shadow-red-100/50 sm:p-9">
-
           <div className="mb-8 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-red-600">
               <HeartPulse size={34} />
@@ -281,7 +283,6 @@ function Login() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700">
                 Email Address
@@ -337,7 +338,6 @@ function Login() {
               Create Account
             </Link>
           </p>
-
         </div>
 
         <Link
@@ -350,6 +350,7 @@ function Login() {
     </div>
   )
 }
+
 
 // Register Page
 function Register() {
@@ -409,7 +410,6 @@ function Register() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 via-white to-orange-50 px-4 py-10">
-
       <div className="w-full max-w-md">
         <Link to="/" className="mb-8 flex items-center justify-center gap-2">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-600 text-white">
@@ -421,7 +421,6 @@ function Register() {
         </Link>
 
         <div className="rounded-3xl border border-gray-100 bg-white p-7 shadow-xl shadow-red-100/50 sm:p-9">
-
           <div className="mb-7 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-red-600">
               <HeartPulse size={34} />
@@ -437,7 +436,6 @@ function Register() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-700">
                 Full Name
@@ -527,7 +525,6 @@ function Register() {
               Login here
             </Link>
           </p>
-
         </div>
 
         <Link
@@ -541,7 +538,8 @@ function Register() {
   )
 }
 
-// Dashboard Page (Temporary)
+
+// Dashboard Page
 function Dashboard() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -575,9 +573,18 @@ function Dashboard() {
           </p>
         </div>
 
+        <Link
+          to="/assistant"
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3 font-semibold text-white transition hover:bg-teal-700"
+        >
+          <Stethoscope size={18} />
+          Open Healthcare Assistant
+          <ArrowRight size={18} />
+        </Link>
+
         <button
           onClick={handleLogout}
-          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 py-3 font-semibold text-white transition hover:bg-red-700"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 py-3 font-semibold text-white transition hover:bg-red-700"
         >
           <LogOut size={18} />
           Logout
@@ -587,8 +594,8 @@ function Dashboard() {
   )
 }
 
-// Main App
 
+// Main App
 function App() {
   return (
     <Routes>
@@ -603,6 +610,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/assistant"
+        element={
+          <ProtectedRoute>
+            <HealthcareAssistant />
           </ProtectedRoute>
         }
       />
