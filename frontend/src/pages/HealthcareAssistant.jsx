@@ -14,8 +14,14 @@ import {
 } from "lucide-react";
 
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 function HealthcareAssistant() {
+  const { user } = useAuth();
+
+  // Separate chat history for each logged-in user
+  const storageKey = `careguide_chat_history_${user?.id ?? user?.email ?? "guest"}`;
+
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -25,20 +31,77 @@ function HealthcareAssistant() {
   const [transcribing, setTranscribing] = useState(false);
   const [speakingId, setSpeakingId] = useState(null);
 
+  const [loadedForKey, setLoadedForKey] = useState(null);
+
   const messagesEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const audioRef = useRef(null);
   const audioUrlRef = useRef(null);
 
-  // Automatically scroll to latest message
+
+  // =====================================
+  // Load Chat History from LocalStorage
+  // =====================================
+
+  useEffect(() => {
+    try {
+      const savedMessages = localStorage.getItem(storageKey);
+
+      if (savedMessages) {
+        const parsedMessages = JSON.parse(savedMessages);
+
+        if (Array.isArray(parsedMessages)) {
+          setMessages(parsedMessages);
+        } else {
+          setMessages([]);
+        }
+      } else {
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error("Chat History Load Error:", error);
+      setMessages([]);
+    }
+
+    setLoadedForKey(storageKey);
+  }, [storageKey]);
+
+
+  // =====================================
+  // Save Chat History to LocalStorage
+  // =====================================
+
+  useEffect(() => {
+    // Wait until history for this user is loaded
+    if (loadedForKey !== storageKey) return;
+
+    try {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify(messages)
+      );
+    } catch (error) {
+      console.error("Chat History Save Error:", error);
+    }
+  }, [messages, storageKey, loadedForKey]);
+
+
+  // =====================================
+  // Automatically Scroll to Latest Message
+  // =====================================
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
     });
   }, [messages, loading, transcribing]);
 
-  // Cleanup microphone and audio resources
+
+  // =====================================
+  // Cleanup Microphone and Audio Resources
+  // =====================================
+
   useEffect(() => {
     return () => {
       if (
@@ -58,7 +121,11 @@ function HealthcareAssistant() {
     };
   }, []);
 
-  // Display API errors
+
+  // =====================================
+  // Display API Errors
+  // =====================================
+
   const handleApiError = (err) => {
     console.error("Healthcare Assistant Error:", err);
 
@@ -81,7 +148,12 @@ function HealthcareAssistant() {
     }
   };
 
-  // Reusable chat function for text and voice questions
+
+  // =====================================
+  // Reusable Chat Function
+  // Text and Voice Questions
+  // =====================================
+
   const sendQuestion = async (userQuestion) => {
     const trimmedQuestion = userQuestion.trim();
 
@@ -128,7 +200,11 @@ function HealthcareAssistant() {
     }
   };
 
-  // Handle normal text chat
+
+  // =====================================
+  // Handle Normal Text Chat
+  // =====================================
+
   const handleSend = async (e) => {
     e.preventDefault();
 
@@ -137,7 +213,11 @@ function HealthcareAssistant() {
     await sendQuestion(question);
   };
 
-  // Start voice recording
+
+  // =====================================
+  // Start Voice Recording
+  // =====================================
+
   const startRecording = async () => {
     if (loading || transcribing || recording) return;
 
@@ -224,7 +304,11 @@ function HealthcareAssistant() {
     }
   };
 
-  // Stop recording
+
+  // =====================================
+  // Stop Recording
+  // =====================================
+
   const stopRecording = () => {
     const recorder = mediaRecorderRef.current;
 
@@ -233,7 +317,11 @@ function HealthcareAssistant() {
     }
   };
 
-  // Send recorded audio to Gemini STT
+
+  // =====================================
+  // Send Recorded Audio to Gemini STT
+  // =====================================
+
   const transcribeAudio = async (audioBlob) => {
     setError("");
     setTranscribing(true);
@@ -284,7 +372,11 @@ function HealthcareAssistant() {
     }
   };
 
-  // Play AI response using Gemini TTS
+
+  // =====================================
+  // Play AI Response Using Gemini TTS
+  // =====================================
+
   const playSpeech = async (text, messageId) => {
     // Stop currently playing audio
     if (
@@ -375,6 +467,11 @@ function HealthcareAssistant() {
     }
   };
 
+
+  // =====================================
+  // UI
+  // =====================================
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
 
@@ -401,6 +498,7 @@ function HealthcareAssistant() {
 
         </div>
       </header>
+
 
       {/* Chat Area */}
       <main className="flex-1 w-full max-w-5xl mx-auto p-5">
@@ -433,6 +531,7 @@ function HealthcareAssistant() {
 
               </div>
             </div>
+
 
             {/* Chat Messages */}
             {messages.map((message) => (
@@ -467,6 +566,7 @@ function HealthcareAssistant() {
                     {message.text}
                   </div>
 
+
                   {/* TTS Button */}
                   {message.sender === "assistant" && (
                     <button
@@ -500,6 +600,7 @@ function HealthcareAssistant() {
 
                 </div>
 
+
                 {message.sender === "user" && (
                   <div className="bg-slate-200 p-2 rounded-full shrink-0">
                     <User
@@ -512,6 +613,7 @@ function HealthcareAssistant() {
               </div>
             ))}
 
+
             {/* Transcription Indicator */}
             {transcribing && (
               <div className="flex items-center gap-2 text-sm text-teal-700">
@@ -522,6 +624,7 @@ function HealthcareAssistant() {
                 আপনার কথা থেকে text তৈরি হচ্ছে...
               </div>
             )}
+
 
             {/* Loading Indicator */}
             {loading && (
@@ -549,6 +652,7 @@ function HealthcareAssistant() {
               </div>
             )}
 
+
             {/* Error Message */}
             {error && (
               <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -566,6 +670,7 @@ function HealthcareAssistant() {
             <div ref={messagesEndRef} />
 
           </div>
+
 
           {/* Message Input */}
           <div className="border-t border-slate-200 p-4 sm:p-5">
@@ -590,6 +695,7 @@ function HealthcareAssistant() {
                 disabled={loading || recording || transcribing}
                 className="flex-1 min-w-0 border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 disabled:bg-slate-100"
               />
+
 
               {/* Microphone / Stop Button */}
               <button
@@ -617,6 +723,7 @@ function HealthcareAssistant() {
                   <Mic size={21} />
                 )}
               </button>
+
 
               {/* Send Button */}
               <button

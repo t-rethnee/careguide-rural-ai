@@ -11,6 +11,7 @@ function Register() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -18,16 +19,38 @@ function Register() {
     e.preventDefault()
 
     setError('')
+
+    if (password.length < 8) {
+      setError('পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError('পাসওয়ার্ড এবং Confirm Password মিলছে না।')
+      return
+    }
+
     setLoading(true)
 
     try {
-      await register(fullName, email, password)
-      navigate('/dashboard')
+      await register({
+        full_name: fullName.trim(),
+        email: email.trim(),
+        password,
+        confirm_password: confirmPassword,
+      })
+
+     navigate('/login', { replace: true })
     } catch (err) {
-      setError(
-        err.response?.data?.detail ||
-        'নিবন্ধন করা সম্ভব হয়নি। আবার চেষ্টা করুন।'
-      )
+      const detail = err.response?.data?.detail
+
+      if (Array.isArray(detail)) {
+        setError(detail.map((item) => item.msg).join(', '))
+      } else if (typeof detail === 'string') {
+        setError(detail)
+      } else {
+        setError('নিবন্ধন করা সম্ভব হয়নি। আবার চেষ্টা করুন।')
+      }
     } finally {
       setLoading(false)
     }
@@ -35,7 +58,6 @@ function Register() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-10">
-
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
 
         <Link to="/" className="flex items-center gap-2">
@@ -66,6 +88,8 @@ function Register() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
+              minLength={2}
+              maxLength={100}
               placeholder="আপনার নাম লিখুন"
               className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-teal-600"
             />
@@ -102,6 +126,22 @@ function Register() {
             />
           </div>
 
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Confirm Password
+            </label>
+
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={8}
+              placeholder="পাসওয়ার্ড আবার লিখুন"
+              className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-teal-600"
+            />
+          </div>
+
           {error && (
             <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
               {error}
@@ -129,7 +169,6 @@ function Register() {
         </p>
 
       </div>
-
     </div>
   )
 }
