@@ -10,9 +10,12 @@ from sqlalchemy import (
     UniqueConstraint,
     func
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+from sqlalchemy.dialects.postgresql import JSONB
+from pgvector.sqlalchemy import Vector
+
 
 
 # =====================================
@@ -299,4 +302,231 @@ class EmergencyContact(Base):
     created_at = mapped_column(
         DateTime(timezone=True),
         server_default=func.now()
+    )
+
+# =====================================
+# Healthcare Knowledge Base Model
+# =====================================
+
+class HealthcareKnowledgeSource(Base):
+
+    __tablename__ = "healthcare_knowledge_sources"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    source_title: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+
+    original_filename: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+
+    source_url: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+
+    publisher: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True
+    )
+
+    language: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="English"
+    )
+
+    document_type: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="pending"
+    )
+
+    uploaded_by: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False
+    )
+
+    created_at = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
+
+    updated_at = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now()
+    )
+
+    chunks = relationship(
+        "HealthcareDocument",
+        back_populates="knowledge_source",
+        cascade="all, delete-orphan"
+    )
+
+
+
+
+
+class HealthcareDocument(Base):
+
+    __tablename__ = "healthcare_documents"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    # Healthcare document content
+    content: Mapped[str] = mapped_column(
+        Text,
+        nullable=False
+    )
+
+    # BGE-M3 embedding (1024 dimensions)
+    embedding: Mapped[list[float] | None] = mapped_column(
+        Vector(1024),
+        nullable=True
+    )
+
+    # Original document information
+    source_title: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
+    )
+
+    source_url: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+
+    # Link chunk to its original knowledge source
+    source_id: Mapped[int | None] = mapped_column(
+        ForeignKey("healthcare_knowledge_sources.id"),
+        nullable=True,
+        index=True
+    )
+
+    knowledge_source = relationship(
+        "HealthcareKnowledgeSource",
+        back_populates="chunks"
+    )
+
+    page_number: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True
+    )
+
+    # Position of this chunk in the document
+    chunk_index: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0
+    )
+
+    # Additional document information
+    document_metadata: Mapped[dict | None] = mapped_column(
+        "metadata",
+        JSONB,
+        nullable=True
+    )
+
+    created_at = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
+
+# =====================================
+# User Report Model
+# =====================================
+
+class UserReport(Base):
+
+    __tablename__ = "user_reports"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    # User who submitted the report
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False,
+        index=True
+    )
+
+    # Related healthcare question
+    question: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+
+    # Related AI response
+    ai_response: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+
+    # Type of reported issue
+    report_type: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False
+    )
+
+    # User's explanation of the issue
+    description: Mapped[str] = mapped_column(
+        Text,
+        nullable=False
+    )
+
+    # Admin review status
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="pending",
+        index=True
+    )
+
+    # Admin's review note
+    admin_note: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+
+    # Admin who reviewed the report
+    reviewed_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=True
+    )
+
+    reviewed_at = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+
+    created_at = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
+
+    updated_at = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now()
     )

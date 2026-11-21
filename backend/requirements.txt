@@ -1,14 +1,33 @@
 
 fastapi
 uvicorn[standard]
+
+# Database
 sqlalchemy
 psycopg[binary]
+pgvector
+
+# Authentication
 pydantic-settings
 pwdlib[argon2]
 PyJWT
-python-multipart
 email-validator
+
+# Environment
 python-dotenv
+
+# File and audio processing
 python-multipart
-python-dotenv
 imageio-ffmpeg
+pypdf
+
+# Gemini AI
+google-genai
+
+# RAG and document processing
+langchain
+langchain-text-splitters
+
+# BGE-M3 embeddings
+sentence-transformers
+langchain-huggingface

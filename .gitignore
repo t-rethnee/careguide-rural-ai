@@ -20,3 +20,8 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+# Test audio files
+backend/*.wav
+
+# Local healthcare knowledge base PDFs
+backend/knowledge_base/*.pdf

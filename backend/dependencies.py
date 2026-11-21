@@ -7,9 +7,14 @@ from database import get_db
 from models import User
 from security import decode_access_token
 
+
 # Bearer token authentication
 bearer_scheme = HTTPBearer()
 
+
+# =====================================
+# Authenticated User Authentication
+# =====================================
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -53,6 +58,22 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    return current_user
+
+
+# =====================================
+# Admin Authorization
+# =====================================
+
+def get_current_admin(
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
         )
 
     return current_user

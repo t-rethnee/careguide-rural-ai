@@ -8,6 +8,7 @@ from pwdlib import PasswordHash
 
 load_dotenv()
 
+
 # Password hashing
 password_hasher = PasswordHash.recommended()
 
@@ -23,9 +24,32 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # JWT configuration
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(
-    os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")
-)
+
+try:
+    ACCESS_TOKEN_EXPIRE_MINUTES = int(
+        os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")
+    )
+except ValueError:
+    raise RuntimeError(
+        "ACCESS_TOKEN_EXPIRE_MINUTES must be a valid integer"
+    )
+
+
+# Validate JWT configuration
+if not SECRET_KEY or len(SECRET_KEY.encode("utf-8")) < 32:
+    raise RuntimeError(
+        "SECRET_KEY must be configured and at least 32 bytes long"
+    )
+
+if ALGORITHM != "HS256":
+    raise RuntimeError(
+        "Only HS256 algorithm is allowed"
+    )
+
+if ACCESS_TOKEN_EXPIRE_MINUTES <= 0:
+    raise RuntimeError(
+        "ACCESS_TOKEN_EXPIRE_MINUTES must be greater than zero"
+    )
 
 
 def create_access_token(data: dict) -> str:
@@ -37,9 +61,6 @@ def create_access_token(data: dict) -> str:
 
     to_encode.update({"exp": expire})
 
-    if not SECRET_KEY:
-        raise RuntimeError("SECRET_KEY is missing from .env")
-
     encoded_jwt = jwt.encode(
         to_encode,
         SECRET_KEY,
@@ -50,15 +71,14 @@ def create_access_token(data: dict) -> str:
 
 
 def decode_access_token(token: str):
-    if not SECRET_KEY:
-        raise RuntimeError("SECRET_KEY is missing from .env")
-
     try:
         payload = jwt.decode(
             token,
             SECRET_KEY,
-            algorithms=[ALGORITHM]
+            algorithms=["HS256"],
+            options={"require": ["exp"]}
         )
+
         return payload
 
     except jwt.InvalidTokenError:
