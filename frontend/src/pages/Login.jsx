@@ -19,10 +19,15 @@ function Login() {
     setError('')
     setLoading(true)
 
-    try {
-      await login(email, password)
-      navigate('/dashboard', { replace: true })
-    } catch (err) {
+   try {
+  const user = await login(email, password)
+
+  if (user.role === 'admin') {
+    navigate('/admin', { replace: true })
+  } else {
+    navigate('/dashboard', { replace: true })
+  }
+} catch (err) {
       setError(
         err.response?.data?.detail ||
         'লগইন করা সম্ভব হয়নি। আবার চেষ্টা করুন।'
